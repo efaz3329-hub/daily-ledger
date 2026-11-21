@@ -198,10 +198,10 @@ const $ = s => document.querySelector(s);
 
 /* ============ what you can tag an hour with ============ */
 const TAGS = [
-  ['sleep','Sleep',232],['ready','Getting ready',190],['commute','Commute',28],['office','Office work',210],
-  ['interview','Interview',330],['channel','Channel work',4],['study','Study / learning',268],['eat','Eating',44],
-  ['phone','Phone / social',296],['rest','Rest / TV',172],['people','Family / friends',142],['prayer','Prayer',96],
-  ['exercise','Exercise / walk',120],['errand','Errands / shopping',16],['other','Other',null]];
+  ['sleep','Sleep',232,'Sleep'],['ready','Getting ready',190,'Ready'],['commute','Commute',28,'Commute'],['office','Office work',210,'Office'],
+  ['interview','Interview',330,'Interview'],['channel','Channel work',4,'Channel'],['study','Study / learning',268,'Study'],['eat','Eating',44,'Eating'],
+  ['phone','Phone / social',296,'Phone'],['rest','Rest / TV',172,'Rest'],['people','Family / friends',142,'People'],['prayer','Prayer',96,'Prayer'],
+  ['exercise','Exercise / walk',120,'Exercise'],['errand','Errands / shopping',16,'Errands'],['other','Other',null,'Other']];
 const tagBy = id => TAGS.find(t=>t[0]===id);
 const tagColor = id => { const t=tagBy(id); return !t||t[2]==null ? 'var(--muted)' : `hsl(${t[2]} var(--S) var(--L))`; };
 const METHODS = ['Cash','bKash','Nagad','Card'];
@@ -214,7 +214,7 @@ let S = (()=>{ try{ return JSON.parse(localStorage.getItem(LS))||null; }catch(e)
 S.days=S.days||{}; S.dirty=S.dirty||{};
 function save(){ try{ localStorage.setItem(LS, JSON.stringify(S)); }catch(e){} }
 function day(k){ return S.days[k] || (S.days[k]={date:k, hours:{}, spend:[], mood:null, note:'', updatedAt:0}); }
-function touch(k){ const d=day(k); d.updatedAt=Date.now(); S.dirty[k]=d.updatedAt; save(); syncSoon(); }
+function touch(k){ const d=day(k); d.updatedAt=Date.now(); S.dirty[k]=d.updatedAt; save(); sync(); }
 let cur = logDay();
 
 /* ============ sync with the Google Sheet (same sync code as Daily Ledger) ============ */
@@ -279,7 +279,7 @@ function render(){
   $('#tiles').innerHTML = `
     <div class="tile money"><div class="k">Spent</div><div class="v num">${tk(spent)}</div></div>
     <div class="tile"><div class="k">Hours logged</div><div class="v num">${filled}<small> / ${Math.max(passed,filled)}</small></div></div>
-    <div class="tile"><div class="k">Most time</div><div class="v">${top?`${esc(tagBy(top[0])[1].split(' ')[0])}<small> ${top[1]}h</small>`:'<small>—</small>'}</div></div>`;
+    <div class="tile"><div class="k">Most time</div><div class="v">${top?`${esc(tagBy(top[0])[3])}<small> ${top[1]}h</small>`:'<small>—</small>'}</div></div>`;
 
   // timeline
   const money={}; d.spend.forEach(x=>{ money[x.h]=(money[x.h]||0)+(+x.amt||0); });
@@ -313,6 +313,7 @@ function render(){
   $('#moods').querySelectorAll('button').forEach(b=>b.onclick=()=>{ const v=+b.dataset.v; d.mood = d.mood===v?null:v; touch(cur); render(); });
   if(document.activeElement!==$('#note')) $('#note').value=d.note||'';
   pill();
+  if(!render.scrolled && cur===today){ render.scrolled=true; const n=$('.hr.now'); if(n) requestAnimationFrame(()=>n.scrollIntoView({block:'center'})); }
 }
 $('#note').addEventListener('input', e=>{ day(cur).note=e.target.value; clearTimeout(render.n); render.n=setTimeout(()=>touch(cur),600); });
 $('#prev').onclick=()=>{ cur=addDays(cur,-1); render(); };
@@ -321,7 +322,7 @@ $('#next').onclick=()=>{ if(cur<logDay()){ cur=addDays(cur,1); render(); } };
 /* ============ sheets ============ */
 const dlg=$('#dlg'), sheet=$('#sheet');
 function openSheet(html){ sheet.innerHTML='<div class="grab"></div>'+html; if(!dlg.open) dlg.showModal(); }
-function closeSheet(){ if(dlg.open) dlg.close(); }
+function closeSheet(){ if(dlg.open) dlg.close(); render(); }
 dlg.addEventListener('click', e=>{ if(e.target===dlg) closeSheet(); });
 dlg.addEventListener('close', render);
 function toast(msg, undo){
@@ -339,7 +340,7 @@ function defaultHour(){
 function gapBefore(d,h){ // empty past hours right before h, back to the last filled one
   const out=[]; let i=ORDER.indexOf(h)-1;
   while(i>=0 && !d.hours[ORDER[i]]) { out.unshift(ORDER[i]); i--; }
-  return out.slice(-10);
+  return (i<0 && out.length>4) ? [] : out.slice(-10);   // nothing logged yet today: only offer a short gap (e.g. sleep before waking)
 }
 function openHour(h){
   const d=day(cur), e=d.hours[h]||{}, i=ORDER.indexOf(h);

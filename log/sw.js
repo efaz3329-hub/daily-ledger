@@ -1,6 +1,6 @@
 // Life Log service worker: opens instantly and offline. App files come from cache and refresh in the background.
 // Sync calls to Google Apps Script are never touched.
-const CACHE = 'life-log-v1';
+const CACHE = 'life-log-v2';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png'];
 
 self.addEventListener('install', e => {
