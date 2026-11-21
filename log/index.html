@@ -279,7 +279,7 @@ function render(){
   $('#tiles').innerHTML = `
     <div class="tile money"><div class="k">Spent</div><div class="v num">${tk(spent)}</div></div>
     <div class="tile"><div class="k">Hours logged</div><div class="v num">${filled}<small> / ${Math.max(passed,filled)}</small></div></div>
-    <div class="tile"><div class="k">Most time</div><div class="v">${top?`${esc(tagBy(top[0])[3])}<small> ${top[1]}h</small>`:'<small>—</small>'}</div></div>`;
+    <div class="tile"><div class="k">Most time${top?` · ${top[1]}h`:''}</div><div class="v">${top?esc(tagBy(top[0])[3]):'<small>—</small>'}</div></div>`;
 
   // timeline
   const money={}; d.spend.forEach(x=>{ money[x.h]=(money[x.h]||0)+(+x.amt||0); });
