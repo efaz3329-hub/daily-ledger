@@ -403,7 +403,7 @@ function applyRemote(docs){
     const [col,id]=p.split('/'); const r=d.data;
     if(col==='days'){ const l=S.days[id]; if(r===null){ if(l){ delete S.days[id]; changed=true; } } else if(!l || (r.updatedAt||0)>(l.updatedAt||0)){ S.days[id]=r; changed=true; } }
     else if(col==='todos'){ const l=S.todos[id]; if(r===null){ if(l){ delete S.todos[id]; changed=true; } } else if(!l || (r.updatedAt||0)>(l.updatedAt||0)){ S.todos[id]=r; changed=true; } }
-    else if(col==='config' && r && (r.updatedAt||0)>(S.upd.settings||0)){ S.settings=mergeSettings(r); S.upd.settings=r.updatedAt||0; changed=true; }
+    else if(col==='config' && id==='settings' && r && (r.updatedAt||0)>(S.upd.settings||0)){ S.settings=mergeSettings(r); S.upd.settings=r.updatedAt||0; changed=true; }
   });
   return changed;
 }
